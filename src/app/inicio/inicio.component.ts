@@ -16,7 +16,6 @@ export class InicioComponent implements OnInit {
   btn =false;
   datos=false;
   info=true;
-  contador = 60;
 
   timeLeft: number = 60;
   interval;
@@ -25,7 +24,11 @@ export class InicioComponent implements OnInit {
   constructor(public usuariosService: UsuariosService, private router: Router,) { }
 
   ngOnInit(): void {
-    this.obtenerUsuarios();
+
+    if(this.info == true){
+      this.obtenerUsuarios();
+      this.pauseTimer();
+    }
     console.log(sessionStorage.getItem('datos'),sessionStorage.getItem('usuario'),sessionStorage.getItem('token'))
     if(sessionStorage.getItem('info')!=null){
       this.info=(sessionStorage.getItem('info') == "true")
@@ -33,31 +36,36 @@ export class InicioComponent implements OnInit {
     if(sessionStorage.getItem('datos')!=null){
       this.datos=(sessionStorage.getItem('datos') == "true")
     }
-    if(this.datos == true){
-      this.timeLeft=60;
-      this.startTimer();
-    }
+
     if(sessionStorage.getItem('usuario')!=null){
       this.nombre=sessionStorage.getItem('usuario');
     }
     if(sessionStorage.getItem('token')!=null){
       this.token=sessionStorage.getItem('token');
     }
-
+    if(this.datos == true){
+      this.timeLeft=60;
+      this.onSelect(sessionStorage.getItem('usuario'),sessionStorage.getItem('token'));
+      this.startTimer();
+    }
   }
 
   obtenerUsuarios() {
     this.usuariosService.getUsuarios().subscribe(data => {
-      console.log("esta es la data " , data)
-      console.log(Object.values(data));
       this.usuarios = Object.values(data);
       console.log(this.usuarios);
+      /**if(this.info == true){
+        console.log("la info se esta mostrando, por lo tanto se va actualiar cada 60 sg")
+        setTimeout(() => {
+          window.location.reload();
+        }, 60000);
+      }*/
     }, (error) => {
       console.error(error);
     })
   }
 
-  onSelect(usuario: string,token:string): void {
+  onSelect(usuario,token): void {
     if(this.info){
       this.info = false;
       sessionStorage.setItem("info", this.info.toString())
@@ -75,9 +83,12 @@ export class InicioComponent implements OnInit {
       }else{
         if(this.nombre == sessionStorage.getItem('usuario')){
           this.token=data["token"];
+          sessionStorage.setItem("token", data["token"]);
         }else{
           this.nombre=data["usuario"];
           this.token=data["token"];
+          sessionStorage.setItem("usuario",data["usuario"]);
+          sessionStorage.setItem("token", data["token"]);
         }
       }
     }, (error) => {
@@ -88,21 +99,19 @@ export class InicioComponent implements OnInit {
   }
 
   onSelect2(): void {
+    this.pauseTimer();
     if(this.datos){
       this.datos = false;
       this.info = true;
       sessionStorage.setItem("datos", this.datos.toString())
       sessionStorage.setItem("info", this.info.toString())
+      window.location.reload();
     }
+
   }
 
-  indicador(){
-    while(this.contador>=0){
-      this.contador = this.contador - 1;
-    }
-  }
   oberserableTimer() {
-    const source = timer(1000, 2000);
+    const source = timer(1000, 1000);
     const abc = source.subscribe(val => {
       console.log(val, '-');
       this.subscribeTimer = this.timeLeft - val;
@@ -110,26 +119,36 @@ export class InicioComponent implements OnInit {
   }
 
   startTimer() {
+    this.info =false;
     this.interval = setInterval(() => {
-      if(this.timeLeft > 0) {
+      if(this.timeLeft >0) {
         this.timeLeft--;
       } else {
         this.usuariosService.getGenerarToken(sessionStorage.getItem('usuario')).subscribe(data => {
-          console.log("Usuario: ",data["usuario"]," Token: ",data["token"]);
+
           if(this.nombre == sessionStorage.getItem('usuario') ){
             this.token=data["token"];
+            sessionStorage.setItem("token", data["token"]);
           }else{
             this.nombre=data["usuario"];
             this.token=data["token"];
+            sessionStorage.setItem("usuario",data["usuario"]);
+            sessionStorage.setItem("token", data["token"]);
           }
+          this.timeLeft = 60;
         }, (error) => {
           console.error(error);
           //sessionStorage.removeItem(datos)
         })
-        this.timeLeft = 60;
+
       }
     },1000)
 
+  }
+
+  pauseTimer() {
+    clearInterval(this.interval);
+    this.timeLeft = 60;
   }
 
 }
