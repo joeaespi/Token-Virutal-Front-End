@@ -1,16 +1,10 @@
 <div className="contenedor">
-  <div className = "contenedor-usuarios" *ngIf="info" >
+  <div className = "contenedor-usuarios"  >
     <ul class="usuarios">
       <li *ngFor="let usuario of usuarios" >
         <span class="badge">Usuario: {{usuario.usuario}}</span>  Nombres: {{usuario.nombres}}
         <button (click)="onSelect(usuario.usuario,usuario.token)">ver datos</button>
       </li>
     </ul>
-  </div>
-  <div className="DatosUsuario" *ngIf="datos">
-    <div>{{nombre}}</div>
-    <div>{{token}}</div>
-    <div>0:{{timeLeft}}</div>
-    <button (click)="onSelect2()">volver</button>
   </div>
 </div>
